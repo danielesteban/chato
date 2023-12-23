@@ -1,7 +1,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { app, BrowserWindow, ipcMain, shell } from 'electron';
-import { onModels, onModel, onPrompt, onReset } from './server';
+import { onModels, onModel, onPrompt, onReset, onUnload } from './server';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -10,6 +10,7 @@ app.whenReady().then(() => {
   ipcMain.on('model', onModel);
   ipcMain.on('prompt', onPrompt);
   ipcMain.on('reset', onReset);
+  ipcMain.on('unload', onUnload);
   const win = new BrowserWindow({
     width: 900,
     height: 600,

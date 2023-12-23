@@ -20,14 +20,14 @@ API.onModel((id, loading, progress) => {
   }
 });
 
-API.onResponse((done, text) => {
+API.onResponse((text, done) => {
   if (done) {
     processing.set(false);
     return;
   }
   messages.update(($messages) => {
     let last = $messages[$messages.length - 1];
-    if (!last.isResponse) {
+    if (!last?.isResponse) {
       last = { isResponse: true, text: '' };
       $messages.push(last);
     }
@@ -45,6 +45,7 @@ export const Model = {
   subscribe: model.subscribe,
   load: API.model,
   reset: API.reset,
+  unload: API.unload,
 };
 
 export const Messages = {

@@ -10,9 +10,12 @@
     <div>
       {$Model.id}
     </div>
-    <div>
-      <button class="reset" on:click={Model.reset}>
+    <div class="actions">
+      <button on:click={Model.reset}>
         reset
+      </button>
+      <button on:click={Model.unload}>
+        unload
       </button>
     </div>
   </div>
@@ -34,7 +37,11 @@
     align-items: center;
     gap: 0.5rem;
   }
-  .reset {
+  .actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .actions > button {
     padding: 0.125rem 0.5rem;
     font-size: 0.6875rem;
     line-height: 0.875rem;

@@ -7,8 +7,8 @@ const API = {
   onModel: (cb: (id: string, loading: boolean, progress: number) => void) => (
     ipcRenderer.on('model', (_event, id, loading = false, progress = 100) => cb(id, loading, progress))
   ),
-  onResponse: (cb: (done: boolean, text: string) => void) => (
-    ipcRenderer.on('response', (_event, done, text) => cb(done, text))
+  onResponse: (cb: (text: string, done: boolean) => void) => (
+    ipcRenderer.on('response', (_event, text, done = false) => cb(text, done))
   ),
   models: () => (
     ipcRenderer.send('models')
@@ -21,6 +21,9 @@ const API = {
   ),
   reset: () => (
     ipcRenderer.send('reset')
+  ),
+  unload: () => (
+    ipcRenderer.send('unload')
   ),
 };
 

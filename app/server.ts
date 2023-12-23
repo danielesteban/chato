@@ -1,18 +1,21 @@
+import { ChildProcess, fork } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { app, IpcMainEvent } from 'electron';
 import easydl from 'easydl';
-import { LlamaModel, LlamaContext, LlamaChatSession } from 'node-llama-cpp';
+import { Action, Request } from './worker.types';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const modelsPath = path.join(app.getPath('documents'), 'chato');
+const defaultModelsPath = path.join(__dirname, 'models.json');
+const userModelsPath = path.join(modelsPath, 'models.json');
+const workerPath = path.join(__dirname, 'worker.js');
+
 if (!fs.existsSync(modelsPath)) {
   fs.mkdirSync(modelsPath, { recursive: true });
 }
 
-const defaultModelsPath = path.join(__dirname, 'models.json');
-const userModelsPath = path.join(modelsPath, 'models.json');
 let models: { id: string; url: string; }[];
 try {
   if (!fs.existsSync(userModelsPath)) {
@@ -23,84 +26,135 @@ try {
   models = JSON.parse(fs.readFileSync(defaultModelsPath, 'utf-8'));
 }
 
-let chat: {
-  id: string,
-  model: LlamaModel,
-  context: LlamaContext,
-  session: LlamaChatSession,
-  current?: AbortController,
+let loader: AbortController | undefined;
+let model: {
+  id: string;
+  controller: AbortController;
+  listeners: Map<number, (res: any) => boolean | void>;
+  reqId: number;
+  worker: ChildProcess;
 } | undefined;
+
+const request = (req: Request, cb: (res: any) => boolean | void) => {
+  if (!model) {
+    throw new Error('Model not loaded');
+  }
+  const reqId = model.reqId++;
+  const { listeners, worker } = model;
+  listeners.set(reqId, cb);
+  worker.send({ id: reqId, ...req });
+};
 
 export const onModels = ({ sender }: IpcMainEvent) => (
   sender.send('models', models.map(({ id }) => id))
 );
 
 export const onModel = async ({ sender }: IpcMainEvent, id: string, gpuLayers: number = 0) => {
-  if (chat?.id === id) {
-    sender.send('model', id);
-    return;
+  if (loader) {
+    loader.abort();
+    loader = undefined;
   }
   const metadata = models.find((m) => m.id === id); 
   if (!metadata) {
     return;
   }
-  if (chat?.current) {
-    chat.current.abort();
+  if (model) {
+    model.controller.abort();
+    model = undefined;
   }
-  chat = undefined;
+
+  const controller = loader = new AbortController();
   const modelPath = path.join(modelsPath, `${metadata.id}.gguf`);
   const exists = fs.existsSync(modelPath);
   sender.send('model', id, true, exists ? 100 : 0);
   try {
     if (!exists) {
-      await new easydl(metadata.url, modelPath, { connections: 1 })
+      let error: Error | undefined;
+      await new easydl(metadata.url, modelPath, { connections: 1, httpOptions: { signal: controller.signal } })
+        .on('error', (e) => {
+          error = e;
+        })
         .on('progress', ({ total }) => (
           sender.send('model', id, true, total.percentage)
         ))
         .wait();
+      if (error) {
+        throw error;
+      }
     }
-    const model = new LlamaModel({ gpuLayers, modelPath });
-    const context = new LlamaContext({ model });
-    const session = new LlamaChatSession({ context });
-    chat = { id, model, context, session };
-  } catch (e) {}
-  sender.send('model', chat ? id : '', false, chat ? 100 : 0);
-};
-
-export const onPrompt = async ({ sender }: IpcMainEvent, text: string) => {
-  if (!chat) {
-    return;
-  }
-  const { context, session } = chat;
-  let { current } = chat;
-  if (current) {
-    current.abort();
-  }
-  chat.current = current = new AbortController();
-  try {
-    await session.prompt(text, {
-      onToken: (tokens) => (
-        sender.send('response', false, context.decode(tokens))
-      ),
-      signal: current.signal,
+    model = await new Promise((resolve, reject) => {
+      if (controller.signal.aborted) {
+        reject({ name: 'AbortError' });
+        return;
+      }
+      const listeners = new Map<number, (res: any) => boolean | void>();
+      const worker = fork(workerPath, [modelPath, gpuLayers.toString()], { signal: controller.signal });
+      worker.on('error', () => {});
+      worker.once('message', (err) => {
+        if (err !== null) {
+          reject(err);
+          return;
+        }
+        worker.on('message', ([id, ...res]: any) => {
+          const listener = listeners.get(id);
+          if (listener) {
+            const done = !listener(res);
+            if (done) {
+              listeners.delete(id);
+            }
+          }
+        });
+        resolve({
+          id,
+          controller,
+          listeners,
+          reqId: 1,
+          worker,
+        });
+      });
     });
   } catch (e) {
     if ((e as Error).name === 'AbortError') {
       return;
     }
   }
-  chat.current = undefined;
-  sender.send('response', true);
+  loader = undefined;
+  sender.send('model', model ? id : '', false, model ? 100 : 0);
+};
+
+export const onPrompt = async ({ sender }: IpcMainEvent, text: string) => {
+  if (!model) {
+    throw new Error('Model not loaded');
+  }
+  request({ action: Action.prompt, text }, ([text, done, aborted]: [string, boolean, boolean]) => {
+    if (aborted) {
+      return;
+    }
+    if (done) {
+      sender.send('response', '', true);
+      return;
+    }
+    sender.send('response', text);
+    return true;
+  });
 };
 
 export const onReset = async ({ sender }: IpcMainEvent) => {
-  if (!chat) {
-    return;
+  if (!model) {
+    throw new Error('Model not loaded');
   }
-  if (chat?.current) {
-    chat.current.abort();
+  const { id } = model;
+  request({ action: Action.reset }, () => sender.send('model', id));
+};
+
+export const onUnload = async ({ sender }: IpcMainEvent) => {
+  if (loader) {
+    loader.abort();
+    loader = undefined;
   }
-  chat.context = new LlamaContext({ model: chat.model });
-  chat.session = new LlamaChatSession({ context: chat.context });
-  sender.send('model', chat.id);
+  if (model) {
+    model.controller.abort();
+    model = undefined;
+  }
+  sender.send('model', '', false, 0);
 };

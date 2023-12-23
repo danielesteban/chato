@@ -11,13 +11,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const { dependencies } = JSON.parse(fs.readFileSync(path.join(__dirname, 'app.json')));
 const outputPath = path.resolve(__dirname, '..', 'dist');
 
-export default ['app.ts', 'api.ts'].map((file) => ({
+export default ['app.ts', 'api.ts', 'worker.ts'].map((file) => ({
   input: path.join(__dirname, file),
   external: ['electron', ...Object.keys(dependencies)],
   output: {
     dir: outputPath,
     entryFileNames: `[name].js`,
-    format: file === 'app.ts' ? 'es' : 'cjs',
+    format: file === 'api.ts' ? 'cjs' : 'es',
     sourcemap: false,
   },
   plugins: [
