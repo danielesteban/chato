@@ -61,6 +61,7 @@
     border-radius: 0.25rem;
     font-family: inherit;
     font-weight: inherit;
+    line-height: inherit;
     cursor: pointer;
     outline: none;
   }

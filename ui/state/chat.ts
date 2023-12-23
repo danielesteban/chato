@@ -14,9 +14,12 @@ API.onModels((list) => (
   models.set(list)
 ));
 
-API.onModel((id, loading, progress) => (
-  model.set({ id, loading, progress })
-));
+API.onModel((id, loading, progress) => {
+  model.set({ id, loading, progress });
+  if (!loading) {
+    messages.set([]);
+  }
+});
 
 API.onResponse((done, text) => {
   if (done) {
@@ -42,11 +45,12 @@ export const GPU = {
 export const Models = {
   subscribe: models.subscribe,
   list: API.models,
-  load: API.model,
 };
 
 export const Model = {
   subscribe: model.subscribe,
+  load: API.model,
+  reset: API.reset,
 };
 
 export const Messages = {

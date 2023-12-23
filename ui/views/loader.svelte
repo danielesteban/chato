@@ -24,7 +24,7 @@
     if (!model) {
       return;
     }
-    Models.load(model, $GPU ? 100 : 0);
+    Model.load(model, $GPU ? 100 : 0);
   };
 
   onMount(() => Models.list());

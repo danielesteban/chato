@@ -37,7 +37,7 @@ export const onModels = ({ sender }: IpcMainEvent) => (
 
 export const onModel = async ({ sender }: IpcMainEvent, id: string, gpuLayers: number = 0) => {
   if (chat?.id === id) {
-    sender.send('model', id, false, 100);
+    sender.send('model', id);
     return;
   }
   const metadata = models.find((m) => m.id === id); 
@@ -94,4 +94,16 @@ export const onPrompt = async ({ sender }: IpcMainEvent, text: string) => {
   }
   chat.current = undefined;
   sender.send('response', true);
+};
+
+export const onReset = async ({ sender }: IpcMainEvent) => {
+  if (!chat) {
+    return;
+  }
+  if (chat?.current) {
+    chat.current.abort();
+  }
+  chat.context = new LlamaContext({ model: chat.model });
+  chat.session = new LlamaChatSession({ context: chat.context });
+  sender.send('model', chat.id);
 };

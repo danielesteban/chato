@@ -7,6 +7,7 @@
   import java from 'svelte-highlight/languages/java';
   import javascript from 'svelte-highlight/languages/javascript';
   import json from 'svelte-highlight/languages/json';
+  import php from 'svelte-highlight/languages/php';
   import python from 'svelte-highlight/languages/python';
   import typescript from 'svelte-highlight/languages/typescript';
 
@@ -18,6 +19,7 @@
     java,
     javascript,
     json,
+    php,
     python,
     typescript,
   };
