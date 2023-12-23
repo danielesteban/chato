@@ -1,7 +1,6 @@
 import { get, writable } from 'svelte/store';
 import type { API } from '../../app/api';
 
-const gpu = writable<boolean>(true);
 const models = writable<string[]>([]);
 const model = writable<{ id: string; loading: boolean; progress: number; }>({ id: '', loading: false, progress: 0 });
 const messages = writable<{ isResponse: boolean; text: string; }[]>([]);
@@ -36,11 +35,6 @@ API.onResponse((done, text) => {
     return $messages;
   });
 });
-
-export const GPU = {
-  subscribe: gpu.subscribe,
-  set: gpu.set,
-};
 
 export const Models = {
   subscribe: models.subscribe,

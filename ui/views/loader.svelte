@@ -1,36 +1,22 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { GPU, Models, Model } from 'state/chat';
-
-  const prevent = (e: MouseEvent) => (
-    e.preventDefault()
-  );
-
-  const keydown = (e: KeyboardEvent) => {
-    if (
-      e.target
-      && !['input', 'select', 'textarea'].includes((e.target as HTMLElement).tagName.toLowerCase())
-      && e.key === ' '
-    ) {
-      e.preventDefault();
-    }
-  };
+  import { Models, Model } from 'state/chat';
 
   let model = '';
-  $: if (model == '' && $Models.length) model = $Models[0];
+  let gpu = true;
+  let maxLayers = 100;
 
   const submit = (e: SubmitEvent) => {
     e.preventDefault();
     if (!model) {
       return;
     }
-    Model.load(model, $GPU ? 100 : 0);
+    Model.load(model, gpu ? maxLayers : 0);
   };
 
   onMount(() => Models.list());
+  $: if ($Models.length && model == '') model = $Models[0];
 </script>
-
-<svelte:document on:contextmenu={prevent} on:keydown={keydown} />
 
 {#if $Model.id && !$Model.loading}
   <slot />
@@ -47,11 +33,15 @@
               {/each}
             </select>
           </div>
-          <div class="field checkbox">
+          <div class="field gpu">
             <label for="GPU">
               GPU
-              <input id="GPU" type="checkbox" bind:checked={$GPU} />
+              <input id="GPU" type="checkbox" bind:checked={gpu} />
             </label>
+            <div class="layers" class:disabled={!gpu}>
+              <label for="maxLayers">Max layers:</label>
+              <input id="maxLayers" type="number" min="0" step="1" disabled={!gpu} bind:value={maxLayers} />
+            </div>
           </div>
           <div class="submit">
             <button type="submit">
@@ -111,18 +101,37 @@
     flex-direction: column;
     gap: 0.5rem;
   }
-  .field > label {
+  .field > label, .layers > label {
     line-height: 1rem;
     color: #ddd;
+    white-space: nowrap;
   }
-  .field.checkbox {
+  .field.gpu {
     flex-direction: row;
-    align-items: center;
+    gap: 1rem;
   }
-  .field.checkbox > label {
+  .field.gpu > label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
+  }
+  .layers {
+    display: flex;
+    gap: 1rem;
+  }
+  .layers > label {
+    display: flex;
+    align-items: center;
+  }
+  .layers.disabled > label {
+    color: #a1a1a1;
+  }
+  .layers > input {
+    width: 100%;
+  }
+  .layers > input:disabled {
+    background: #1a1a1a;
+    color: #a1a1a1;
   }
   .submit {
     display: flex;
