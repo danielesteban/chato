@@ -1,0 +1,9 @@
+{
+  "name": "chato",
+  "main": "app.js",
+  "type": "module",
+  "dependencies": {
+    "easydl": "^1.1.1",
+    "node-llama-cpp": "^2.8.3"
+  }
+}

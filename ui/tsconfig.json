@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["svelte"],
+    "baseUrl": ".",
+    "paths": {
+      "components/*": ["./components/*"],
+      "state/*": ["./state/*"],
+      "views/*": ["./views/*"],
+      "protocol/*": ["../../server/protocol/*"]
+    }
+  }
+}

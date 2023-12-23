@@ -1,0 +1,17 @@
+[
+  {
+    "id": "mistral-7b-instruct-v0.1",
+    "filename": "mistral-7b-instruct-v0.1.Q4_K_M.gguf",
+    "download": "https://huggingface.co/TheBloke/Mistral-7B-Instruct-v0.1-GGUF/resolve/main/mistral-7b-instruct-v0.1.Q4_K_M.gguf?download=true"
+  },
+  {
+    "id": "zephyr-7b-beta",
+    "filename": "zephyr-7b-beta.Q4_K_M.gguf",
+    "download": "https://huggingface.co/TheBloke/zephyr-7B-beta-GGUF/resolve/main/zephyr-7b-beta.Q4_K_M.gguf?download=true"
+  },
+  {
+    "id": "llama-2-7b-chat",
+    "filename": "llama-2-7b-chat.Q4_K_M.gguf",
+    "download": "https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf?download=true"
+  }
+]
