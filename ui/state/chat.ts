@@ -17,6 +17,7 @@ API.onModel((id, loading, progress) => {
   model.set({ id, loading, progress });
   if (!loading) {
     messages.set([]);
+    processing.set(false);
   }
 });
 

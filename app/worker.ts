@@ -43,6 +43,7 @@ process.on('message', async (req: Request & { id: number }) => {
     case Action.reset:
       if (current) {
         current.abort();
+        current = undefined;
       }
       context = new LlamaContext({ model });
       session = new LlamaChatSession({ context });
