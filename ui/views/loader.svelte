@@ -6,8 +6,7 @@
   let gpu = true;
   let maxLayers = 100;
 
-  const submit = (e: SubmitEvent) => {
-    e.preventDefault();
+  const submit = () => {
     if (!model) {
       return;
     }
@@ -23,33 +22,31 @@
 {:else}
   <div class="loader">
     <div class="wrapper">
-      <form on:submit={submit}>
-        <div class="fields">
-          <div class="field">
-            <label for="model">Model</label>
-            <select id="model" bind:value={model}>
-              {#each $Models as model}
-                <option value={model}>{model}</option>
-              {/each}
-            </select>
-          </div>
-          <div class="field gpu">
-            <label for="GPU">
-              GPU
-              <input id="GPU" type="checkbox" bind:checked={gpu} />
-            </label>
-            <div class="layers" class:disabled={!gpu}>
-              <label for="maxLayers">Max layers:</label>
-              <input id="maxLayers" type="number" min="0" step="1" disabled={!gpu} bind:value={maxLayers} />
-            </div>
-          </div>
-          <div class="submit">
-            <button type="submit">
-              Load
-            </button>
+      <div class="fields">
+        <div class="model">
+          <label for="model">Model</label>
+          <select id="model" bind:value={model}>
+            {#each $Models as model}
+              <option value={model}>{model}</option>
+            {/each}
+          </select>
+        </div>
+        <div class="gpu">
+          <label for="GPU">
+            GPU
+            <input id="GPU" type="checkbox" bind:checked={gpu} />
+          </label>
+          <div class="layers" class:disabled={!gpu}>
+            <label for="maxLayers">Max layers:</label>
+            <input id="maxLayers" type="number" min="0" step="1" disabled={!gpu} bind:value={maxLayers} />
           </div>
         </div>
-      </form>
+        <div class="submit">
+          <button on:click={submit}>
+            Load
+          </button>
+        </div>
+      </div>
       <div class="info">
         <a href="https://dani.gatunes.com" rel="noopener noreferrer" target="_blank">dani@gatunes</a> © 2023
       </div>
@@ -96,21 +93,22 @@
     background: #222;
     border: 1px solid #000;
   }
-  .field {
+  .model {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
   }
-  .field > label, .layers > label {
+  .model > label, .gpu > label, .layers > label {
     line-height: 1rem;
     color: #ddd;
     white-space: nowrap;
   }
-  .field.gpu {
+  .gpu {
+    display: flex;
     flex-direction: row;
     gap: 1rem;
   }
-  .field.gpu > label {
+  .gpu > label {
     display: flex;
     align-items: center;
     gap: 0.5rem;
