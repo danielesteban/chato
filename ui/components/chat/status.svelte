@@ -4,13 +4,11 @@
 
 <div class="status">
   <div>
-    {#if $Processing}
-      Processing...
-    {/if}
+    {$Processing ? 'Processing...' : 'Ready'}
   </div>
   <div class="model">
     <div>
-      Model: {$Model.id}
+      {$Model.id}
     </div>
     <div>
       <button class="reset" on:click={Model.reset}>
@@ -23,6 +21,7 @@
 <style>
   .status {
     background: #000;
+    color: #aaa;
     border-top: 1px solid #111;
     padding: 0.25rem 0.5rem;
     display: flex;

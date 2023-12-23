@@ -1,8 +1,8 @@
 <script lang="ts">
   import Split, { SplitMode } from 'components/split.svelte';
-  import Messages from 'components/messages.svelte';
-  import Prompt from 'components/prompt.svelte';
-  import Status from 'components/status.svelte';
+  import Messages from 'components/chat/messages.svelte';
+  import Prompt from 'components/chat/prompt.svelte';
+  import Status from 'components/chat/status.svelte';
 </script>
 
 <div class="chat">
