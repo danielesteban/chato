@@ -12,9 +12,9 @@
     if (scroll && scroll.scrollHeight - scroll.clientHeight <= scroll.scrollTop + 1) {
       await tick();
       scroll.scroll({
-			  top: scroll.scrollHeight,
-			  behavior: 'instant',
-		  });
+        top: scroll.scrollHeight,
+        behavior: 'instant',
+      });
     }
   });
 </script>
