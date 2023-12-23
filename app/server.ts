@@ -13,7 +13,7 @@ if (!fs.existsSync(modelsPath)) {
 
 const defaultModelsPath = path.join(__dirname, 'models.json');
 const userModelsPath = path.join(modelsPath, 'models.json');
-let models: { id: string; filename: string; download: string; }[];
+let models: { id: string; url: string; }[];
 try {
   if (!fs.existsSync(userModelsPath)) {
     fs.copyFileSync(defaultModelsPath, userModelsPath);
@@ -48,21 +48,18 @@ export const onModel = async ({ sender }: IpcMainEvent, id: string, gpuLayers: n
     chat.current.abort();
   }
   chat = undefined;
-  const modelPath = path.join(modelsPath, metadata.filename);
+  const modelPath = path.join(modelsPath, `${metadata.id}.gguf`);
   const exists = fs.existsSync(modelPath);
   sender.send('model', id, true, exists ? 100 : 0);
   try {
     if (!exists) {
-      await new easydl(metadata.download, modelPath, { connections: 1 })
+      await new easydl(metadata.url, modelPath, { connections: 1 })
         .on('progress', ({ total }) => (
           sender.send('model', id, true, total.percentage)
         ))
         .wait();
     }
-    const model = new LlamaModel({
-      gpuLayers,
-      modelPath: path.join(modelsPath, metadata.filename),
-    });
+    const model = new LlamaModel({ gpuLayers, modelPath });
     const context = new LlamaContext({ model });
     const session = new LlamaChatSession({ context });
     chat = { id, model, context, session };
